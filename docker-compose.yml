@@ -1,0 +1,46 @@
+version: '3'
+services:
+  loki:
+    image: grafana/loki:master
+    container_name: loki
+    hostname: loki_server
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: ${MONITORING_SERVER_IP_ADDRESS}:24224
+        fluentd-async-connect: "true"
+        tag: devops.server.loki
+    depends_on:
+      - fluentd
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    hostname: grafana_server
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: ${MONITORING_SERVER_IP_ADDRESS}:24224
+        fluentd-async-connect: "true"
+        tag: devops.server.grafana
+    depends_on:
+      - fluentd
+
+  fluentd:
+    image: grafana/fluent-plugin-loki:master
+    hostname: fluentd_server
+    container_name: fluentd
+    user: root
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+      - /var/log:/fluentd/log/system/devops_server:ro
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
