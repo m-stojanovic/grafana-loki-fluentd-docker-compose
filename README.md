@@ -15,6 +15,7 @@
 ## About The Project
 
 Run Monitoring stack of Grafana Loki, Grafana and Fluentd on your environment with custom fluentd configuration.
+Change $MONITORING_SERVER_IP_ADDRESS with the IP Address of your Fluentd server. Or use .env file with variabl $MONITORING_SERVER_IP_ADDRESS.
 
 ### Built With
 
