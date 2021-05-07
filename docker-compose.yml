@@ -7,15 +7,13 @@ services:
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
-    restart: unless-stopped
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: ${MONITORING_SERVER_IP_ADDRESS}:24224
-        fluentd-async-connect: "true"
-        tag: devops.server.loki
-    depends_on:
-      - fluentd
+    # restart: unless-stopped
+    # logging:
+    #   driver: fluentd
+    #   options:
+    #     fluentd-address: ${MONITORING_SERVER_IP_ADDRESS}:24224
+    #     fluentd-async-connect: "true"
+    #     tag: devops.server.loki
 
   grafana:
     image: grafana/grafana
@@ -24,14 +22,13 @@ services:
     restart: unless-stopped
     ports:
       - '3000:3000'
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: ${MONITORING_SERVER_IP_ADDRESS}:24224
-        fluentd-async-connect: "true"
-        tag: devops.server.grafana
-    depends_on:
-      - fluentd
+    volumes:
+      - "config:/etc/grafana"
+      - "share:/usr/share/grafana"
+      - "log:/var/log/grafana"
+      - "lib:/var/lib/grafana"
+    env_file:
+      - ./grafana/config.monitoring
 
   fluentd:
     image: grafana/fluent-plugin-loki:master
@@ -41,6 +38,20 @@ services:
     volumes:
       - ./fluentd/conf:/fluentd/etc
       - /var/log:/fluentd/log/system/devops_server:ro
+      - /var/lib/docker/containers:/fluentd/log/containers:ro
+      - fluentd_plugins:/fluentd/plugins
     ports:
       - "24224:24224"
       - "24224:24224/udp"
+
+networks:
+ default:
+   external:
+     name: monitoring_stack
+
+volumes:
+  lib: {}
+  log: {}
+  share: {}
+  config: {}
+  fluentd_plugins: {}
